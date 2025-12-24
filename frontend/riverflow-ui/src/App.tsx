@@ -139,11 +139,6 @@ type NodeInspectorProps = {
   onUpdate: (patch: Partial<NodeData>) => void;
 };
 
-const inspectorMap = {
-  apiNode: APINodeInspector,
-  conditionNode: ConditionNodeInspector,
-} as const;
-
 export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
   switch (node.type) {
     case 'apiNode':
