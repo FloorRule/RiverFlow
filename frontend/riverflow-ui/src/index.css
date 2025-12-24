@@ -3,6 +3,28 @@
 
 @custom-variant dark (&:is(.dark *));
 
+
+.react-flow__controls {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.react-flow__controls button {
+  background-color: var(--card);
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.react-flow__controls button:hover {
+  background-color: var(--muted);
+}
+
+.dark .react-flow__controls {
+  background-color: var(--card);
+  border-color: var(--border);
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
