@@ -5,6 +5,7 @@ import "@xyflow/react/dist/style.css";
 import { useCallback, useMemo, useState } from 'react';
 import { APINode, type ApiNodeData } from "./nodes/API-node";
 import { ConditionNode, type ConditionNodeData } from "./nodes/Condition-node";
+import { ScriptNode, type ScriptNodeData } from "./nodes/Script-node";
  
 
 //! API - Inspector 
@@ -107,6 +108,43 @@ function ConditionNodeInspector({
   );
 }
 
+//! Script - Inspector 
+
+function ScriptNodeInspector({
+  node,
+  onClose,
+  onUpdate,
+}: {
+  node: Node<ScriptNodeData>;
+  onClose: () => void;
+  onUpdate: (patch: Partial<ScriptNodeData>) => void;
+}) {
+  return (
+    <div className="space-y-4 bg-card text-yellow-400 transition">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Script : {node.id}</h2>
+        <button
+          onClick={onClose}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">Python Code</label>
+        <textarea
+          rows={4}
+          className="mt-1 w-full rounded border border-border bg-background px-2 py-1 font-mono text-sm"
+          placeholder='print("Hello World")'
+          value={node.data.pythonScript}
+          onChange={(e) => onUpdate({ pythonScript: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
 //! Node Button
 
 const colors: string[] = [
@@ -159,15 +197,25 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
         />
       );
 
+    case 'scriptNode':
+      return (
+        <ScriptNodeInspector
+          node={node as Node<ScriptNodeData>}
+          onClose={onClose}
+          onUpdate={onUpdate as (p: Partial<ScriptNodeData>) => void}
+        />
+      );
+
     default:
       return null;
   }
 }
 
-export type NodeData = ApiNodeData | ConditionNodeData;
+export type NodeData = ApiNodeData | ConditionNodeData | ScriptNodeData;
 const nodeTypes = {
   apiNode: APINode,
   conditionNode: ConditionNode,
+  scriptNode: ScriptNode,
 };
 
 
@@ -206,33 +254,33 @@ function Flow() {
     setEdges((edges) => {
 
       const sourceNode = nodes.find((n) => n.id === params.source);
+      const targetNode = nodes.find((n) => n.id === params.target);
 
-      if (sourceNode) 
-      {
-          if (sourceNode.type === 'conditionNode') {
-          const handleUsed = edges.some(
-            (e) =>
-              e.source === params.source &&
-              e.sourceHandle === params.sourceHandle
-          );
+      if (!sourceNode || !targetNode) 
+        return edges;
 
-          if (handleUsed) 
-            return edges;
+      const sourceOutCount = edges.filter(
+        (e) => e.source === params.source
+      ).length;
 
-          return addEdge(params, edges);
-        }
+      const targetInCount = edges.filter(
+        (e) => e.target === params.target
+      ).length;
+
+      if (sourceNode.type === 'conditionNode') {
+        if (targetInCount >= 1 || sourceOutCount >= 2) 
+          return edges;
+
+        return addEdge(params, edges);
       }
 
-
-      const hasConnection = edges.some(
-        (e) => e.source === params.source || e.target === params.target
-      );
-
-      if (hasConnection) return edges;
+      if (sourceOutCount >= 1 || targetInCount >= 1) 
+        return edges;
 
       return addEdge(params, edges);
     });
-  }, []);
+  },
+  [nodes]);
 
   const updateActiveNodeData = useCallback(
     (patch: Partial<NodeData>) => {
@@ -286,6 +334,23 @@ function Flow() {
     ]);
   }, []);
 
+  const addScriptNode = useCallback(() => {
+    const id = crypto.randomUUID();
+
+    setNodes((nds) => [
+      ...nds,
+      {
+        id,
+        type: 'scriptNode',
+        position: { x: 100, y: 100 },
+        data: {
+          onOpen: (nodeId: string) => setActiveNodeId(nodeId),
+          pythonScript: '',
+        },
+      },
+    ]);
+  }, []);
+
   return (
     <div style={{ height: '100vh', width: '100vw' }}>
       <ReactFlow
@@ -303,7 +368,7 @@ function Flow() {
             <NodeButton label="API Node" onClick={addAPINode} colorIndex={0} />
             <NodeButton label="Condition Node" onClick={addConditionNode} colorIndex={1} />
             <NodeButton label="Webhook Node" onClick={addAPINode} colorIndex={2} />
-            <NodeButton label="Python/JS Code Node" onClick={addAPINode} colorIndex={3} />
+            <NodeButton label="Python Code Node" onClick={addScriptNode} colorIndex={3} />
             <NodeButton label="Wait/Delay Node" onClick={addAPINode} colorIndex={4} />
           </div>
         </Panel>
