@@ -7,6 +7,7 @@ import { APINode, type ApiNodeData } from "./nodes/API-node";
 import { ConditionNode, type ConditionNodeData } from "./nodes/Condition-node";
 import { ScriptNode, type ScriptNodeData } from "./nodes/Script-node";
 import { WaitNode, type WaitNodeData } from "./nodes/Wait-node";
+import { HookNode, type HookNodeData } from "./nodes/Webhook-node";
  
 
 //! API - Inspector 
@@ -183,6 +184,43 @@ function WaitNodeInspector({
   );
 }
 
+//! Hook - Inspector 
+
+function HookNodeInspector({
+  node,
+  onClose,
+  onUpdate,
+}: {
+  node: Node<HookNodeData>;
+  onClose: () => void;
+  onUpdate: (patch: Partial<HookNodeData>) => void;
+}) {
+  return (
+    <div className="space-y-4 bg-card text-green-400 transition">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Webhook : {node.id}</h2>
+        <button
+          onClick={onClose}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">Url</label>
+        <textarea
+          rows={1}
+          className="mt-1 w-full rounded border border-border bg-background px-2 py-1 font-mono text-sm"
+          placeholder='api.yourapp.com/hooks/{workflow_id}'
+          value={node.data.url}
+          onChange={(e) => onUpdate({ url: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
 //! Node Button
 
 const colors: string[] = [
@@ -245,25 +283,36 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
       );
 
       case 'waitNode':
-      return (
-        <WaitNodeInspector
-          node={node as Node<WaitNodeData>}
-          onClose={onClose}
-          onUpdate={onUpdate as (p: Partial<WaitNodeData>) => void}
-        />
-      );
+        return (
+          <WaitNodeInspector
+            node={node as Node<WaitNodeData>}
+            onClose={onClose}
+            onUpdate={onUpdate as (p: Partial<WaitNodeData>) => void}
+          />
+        );
+
+      case 'hookNode':
+        return (
+          <HookNodeInspector
+            node={node as Node<HookNodeData>}
+            onClose={onClose}
+            onUpdate={onUpdate as (p: Partial<HookNodeData>) => void}
+          />
+        );
+
 
     default:
       return null;
   }
 }
 
-export type NodeData = ApiNodeData | ConditionNodeData | ScriptNodeData | WaitNodeData;
+export type NodeData = ApiNodeData | ConditionNodeData | ScriptNodeData | WaitNodeData | HookNodeData;
 const nodeTypes = {
   apiNode: APINode,
   conditionNode: ConditionNode,
   scriptNode: ScriptNode,
   waitNode: WaitNode,
+  hookNode: HookNode,
 };
 
 
@@ -416,6 +465,23 @@ function Flow() {
     ]);
   }, []);
 
+    const addHookNode = useCallback(() => {
+    const id = crypto.randomUUID();
+
+    setNodes((nds) => [
+      ...nds,
+      {
+        id,
+        type: 'hookNode',
+        position: { x: 100, y: 100 },
+        data: {
+          onOpen: (nodeId: string) => setActiveNodeId(nodeId),
+          url: '',
+        },
+      },
+    ]);
+  }, []);
+
   return (
     <div style={{ height: '100vh', width: '100vw' }}>
       <ReactFlow
@@ -432,7 +498,7 @@ function Flow() {
           <div className="w-48 max-h-[70vh] overflow-y-auto rounded-lg border border-border bg-card p-2 shadow-md">
             <NodeButton label="API Node" onClick={addAPINode} colorIndex={0} />
             <NodeButton label="Condition Node" onClick={addConditionNode} colorIndex={1} />
-            <NodeButton label="Webhook Node" onClick={addAPINode} colorIndex={2} />
+            <NodeButton label="Webhook Node" onClick={addHookNode} colorIndex={2} />
             <NodeButton label="Python Code Node" onClick={addScriptNode} colorIndex={3} />
             <NodeButton label="Wait/Delay Node" onClick={addWaitNode} colorIndex={4} />
           </div>
@@ -440,7 +506,7 @@ function Flow() {
 
         {activeNode && (
           <Panel position="center-left">
-            <div className="w-80 max-h-[80vh] overflow-y-auto rounded-lg border border-border bg-card p-4 shadow-lg text-foreground">
+            <div className="w-90 max-h-[80vh] overflow-y-auto rounded-lg border border-border bg-card p-4 shadow-lg text-foreground">
               <NodeInspector
                 node={activeNode}
                 onClose={() => setActiveNodeId(null)}
