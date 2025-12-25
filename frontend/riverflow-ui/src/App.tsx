@@ -16,10 +16,12 @@ function APINodeInspector({
   node,
   onClose,
   onUpdate,
+  onDelete,
 }: {
   node: Node<ApiNodeData>;
   onClose: () => void;
   onUpdate: (patch: Partial<ApiNodeData>) => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="space-y-4 bg-card text-blue-400 transition">
@@ -68,6 +70,12 @@ function APINodeInspector({
           value={node.data.body}
           onChange={(e) => onUpdate({ body: e.target.value })}
         />
+        <button
+          onClick={onDelete}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
@@ -79,10 +87,12 @@ function ConditionNodeInspector({
   node,
   onClose,
   onUpdate,
+  onDelete,
 }: {
   node: Node<ConditionNodeData>;
   onClose: () => void;
   onUpdate: (patch: Partial<ConditionNodeData>) => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="space-y-4 bg-card text-red-400 transition">
@@ -99,13 +109,20 @@ function ConditionNodeInspector({
       <div>
         <label className="block text-sm font-medium">Expression</label>
         <textarea
-          rows={4}
+          rows={2}
           className="mt-1 w-full rounded border border-border bg-background px-2 py-1 font-mono text-sm"
           placeholder='x >= 5'
           value={node.data.expression}
           onChange={(e) => onUpdate({ expression: e.target.value })}
         />
+        <button
+          onClick={onDelete}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          Delete
+        </button>
       </div>
+      
     </div>
   );
 }
@@ -116,10 +133,12 @@ function ScriptNodeInspector({
   node,
   onClose,
   onUpdate,
+  onDelete,
 }: {
   node: Node<ScriptNodeData>;
   onClose: () => void;
   onUpdate: (patch: Partial<ScriptNodeData>) => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="space-y-4 bg-card text-yellow-400 transition">
@@ -142,6 +161,12 @@ function ScriptNodeInspector({
           value={node.data.pythonScript}
           onChange={(e) => onUpdate({ pythonScript: e.target.value })}
         />
+        <button
+          onClick={onDelete}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
@@ -153,10 +178,12 @@ function WaitNodeInspector({
   node,
   onClose,
   onUpdate,
+  onDelete,
 }: {
   node: Node<WaitNodeData>;
   onClose: () => void;
   onUpdate: (patch: Partial<WaitNodeData>) => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="space-y-4 bg-card text-pink-400 transition">
@@ -173,12 +200,18 @@ function WaitNodeInspector({
       <div>
         <label className="block text-sm font-medium">Delay (seconds)</label>
         <textarea
-          rows={4}
+          rows={1}
           className="mt-1 w-full rounded border border-border bg-background px-2 py-1 font-mono text-sm"
           placeholder='5'
           value={node.data.delay}
           onChange={(e) => onUpdate({ delay: e.target.value })}
         />
+        <button
+          onClick={onDelete}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
@@ -190,10 +223,12 @@ function HookNodeInspector({
   node,
   onClose,
   onUpdate,
+  onDelete,
 }: {
   node: Node<HookNodeData>;
   onClose: () => void;
   onUpdate: (patch: Partial<HookNodeData>) => void;
+  onDelete: () => void;
 }) {
   return (
     <div className="space-y-4 bg-card text-green-400 transition">
@@ -216,6 +251,12 @@ function HookNodeInspector({
           value={node.data.url}
           onChange={(e) => onUpdate({ url: e.target.value })}
         />
+        <button
+          onClick={onDelete}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          Delete
+        </button>
       </div>
     </div>
   );
@@ -251,9 +292,10 @@ type NodeInspectorProps = {
   node: Node<NodeData>;
   onClose: () => void;
   onUpdate: (patch: Partial<NodeData>) => void;
+  onDelete: () => void;
 };
 
-export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
+export function NodeInspector({ node, onClose, onUpdate, onDelete}: NodeInspectorProps) {
   switch (node.type) {
     case 'apiNode':
       return (
@@ -261,6 +303,7 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
           node={node as Node<ApiNodeData>}
           onClose={onClose}
           onUpdate={onUpdate as (p: Partial<ApiNodeData>) => void}
+          onDelete={onDelete}
         />
       );
 
@@ -270,6 +313,7 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
           node={node as Node<ConditionNodeData>}
           onClose={onClose}
           onUpdate={onUpdate as (p: Partial<ConditionNodeData>) => void}
+          onDelete={onDelete}
         />
       );
 
@@ -279,6 +323,7 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
           node={node as Node<ScriptNodeData>}
           onClose={onClose}
           onUpdate={onUpdate as (p: Partial<ScriptNodeData>) => void}
+          onDelete={onDelete}
         />
       );
 
@@ -288,6 +333,7 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
             node={node as Node<WaitNodeData>}
             onClose={onClose}
             onUpdate={onUpdate as (p: Partial<WaitNodeData>) => void}
+            onDelete={onDelete}
           />
         );
 
@@ -297,6 +343,7 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
             node={node as Node<HookNodeData>}
             onClose={onClose}
             onUpdate={onUpdate as (p: Partial<HookNodeData>) => void}
+            onDelete={onDelete}
           />
         );
 
@@ -323,6 +370,8 @@ const initialEdges: Edge[] = [];
 
 function Flow() {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
+  const [selectedEdgeIds, setSelectedEdgeIds] = useState<Set<string>>(new Set());
+
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 
@@ -330,6 +379,22 @@ function Flow() {
     () => nodes.find((n) => n.id === activeNodeId) ?? null,
     [nodes, activeNodeId]
   );
+
+  const handleDelete = useCallback(() => {
+    if (!activeNode) 
+      return;
+
+    const nodeId = activeNode.id;
+
+    setNodes((nodes) => nodes.filter((node) => node.id !== nodeId));
+    setEdges((edges) =>
+      edges.filter(
+        (edge) => edge.source !== nodeId && edge.target !== nodeId
+      )
+    );
+
+    setActiveNodeId(null);
+  }, [activeNode, setNodes, setEdges]);
 
   const handleNodesChange = useCallback(
     (changes) =>
@@ -340,10 +405,19 @@ function Flow() {
   );
 
   const handleEdgesChange = useCallback(
-    (changes) =>
-      setEdges((edgesSnapshot) =>
-        applyEdgeChanges(changes, edgesSnapshot)
-      ),
+    (changes) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds));
+
+      changes.forEach((change) => {
+        if (change.type === 'select') {
+          setSelectedEdgeIds((prev) => {
+            const next = new Set(prev);
+            change.selected ? next.add(change.id) : next.delete(change.id);
+            return next;
+          });
+        }
+      });
+    },
     []
   );
 
@@ -465,7 +539,7 @@ function Flow() {
     ]);
   }, []);
 
-    const addHookNode = useCallback(() => {
+  const addHookNode = useCallback(() => {
     const id = crypto.randomUUID();
 
     setNodes((nds) => [
@@ -481,6 +555,11 @@ function Flow() {
       },
     ]);
   }, []);
+
+  const deleteSelectedEdges = useCallback(() => {
+    setEdges((eds) => eds.filter((e) => !selectedEdgeIds.has(e.id)));
+    setSelectedEdgeIds(new Set());
+  }, [selectedEdgeIds]);
 
   return (
     <div style={{ height: '100vh', width: '100vw' }}>
@@ -511,10 +590,40 @@ function Flow() {
                 node={activeNode}
                 onClose={() => setActiveNodeId(null)}
                 onUpdate={updateActiveNodeData}
+                onDelete={handleDelete}
               />
             </div>
           </Panel>
         )}
+
+        <Panel position="top-center">
+          <div className="rounded-md border border-border bg-card px-6 py-2 shadow-md">
+            <h1 className="text-lg font-bold tracking-wide text-foreground">
+              RiverFlow
+            </h1>
+          </div>
+        </Panel>
+
+
+        <Panel position="bottom-center">
+          <div className="flex">
+            <button
+            onClick={deleteSelectedEdges}
+            disabled={selectedEdgeIds.size === 0}
+            className="
+              flex items-center gap-2 rounded-md border border-border
+              bg-card px-4 py-2 text-sm font-medium text-foreground shadow-md
+              transition hover:bg-muted
+              disabled:opacity-50 disabled:cursor-not-allowed
+            "
+            >
+              Cut
+            </button>
+            <button className="mx-10 h-10 w-25 text-lg rounded-lg bg-emerald-500 text-emerald-50 font-bold font-mono text-shadow-md hover:text-gray-800">
+              Run 
+            </button>
+          </div>
+        </Panel>
 
         <Background className="bg-background" />
         <Controls className="bg-card border-border text-foreground" />
