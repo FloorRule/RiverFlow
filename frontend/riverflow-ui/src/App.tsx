@@ -6,6 +6,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { APINode, type ApiNodeData } from "./nodes/API-node";
 import { ConditionNode, type ConditionNodeData } from "./nodes/Condition-node";
 import { ScriptNode, type ScriptNodeData } from "./nodes/Script-node";
+import { WaitNode, type WaitNodeData } from "./nodes/Wait-node";
  
 
 //! API - Inspector 
@@ -145,6 +146,43 @@ function ScriptNodeInspector({
   );
 }
 
+//! Wait - Inspector 
+
+function WaitNodeInspector({
+  node,
+  onClose,
+  onUpdate,
+}: {
+  node: Node<WaitNodeData>;
+  onClose: () => void;
+  onUpdate: (patch: Partial<WaitNodeData>) => void;
+}) {
+  return (
+    <div className="space-y-4 bg-card text-pink-400 transition">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Wait : {node.id}</h2>
+        <button
+          onClick={onClose}
+          className="h-5 w-5 text-sm text-muted-foreground hover:text-foreground"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">Delay (seconds)</label>
+        <textarea
+          rows={4}
+          className="mt-1 w-full rounded border border-border bg-background px-2 py-1 font-mono text-sm"
+          placeholder='5'
+          value={node.data.delay}
+          onChange={(e) => onUpdate({ delay: e.target.value })}
+        />
+      </div>
+    </div>
+  );
+}
+
 //! Node Button
 
 const colors: string[] = [
@@ -206,16 +244,26 @@ export function NodeInspector({ node, onClose, onUpdate }: NodeInspectorProps) {
         />
       );
 
+      case 'waitNode':
+      return (
+        <WaitNodeInspector
+          node={node as Node<WaitNodeData>}
+          onClose={onClose}
+          onUpdate={onUpdate as (p: Partial<WaitNodeData>) => void}
+        />
+      );
+
     default:
       return null;
   }
 }
 
-export type NodeData = ApiNodeData | ConditionNodeData | ScriptNodeData;
+export type NodeData = ApiNodeData | ConditionNodeData | ScriptNodeData | WaitNodeData;
 const nodeTypes = {
   apiNode: APINode,
   conditionNode: ConditionNode,
   scriptNode: ScriptNode,
+  waitNode: WaitNode,
 };
 
 
@@ -351,6 +399,23 @@ function Flow() {
     ]);
   }, []);
 
+  const addWaitNode = useCallback(() => {
+    const id = crypto.randomUUID();
+
+    setNodes((nds) => [
+      ...nds,
+      {
+        id,
+        type: 'waitNode',
+        position: { x: 100, y: 100 },
+        data: {
+          onOpen: (nodeId: string) => setActiveNodeId(nodeId),
+          delay: '',
+        },
+      },
+    ]);
+  }, []);
+
   return (
     <div style={{ height: '100vh', width: '100vw' }}>
       <ReactFlow
@@ -369,7 +434,7 @@ function Flow() {
             <NodeButton label="Condition Node" onClick={addConditionNode} colorIndex={1} />
             <NodeButton label="Webhook Node" onClick={addAPINode} colorIndex={2} />
             <NodeButton label="Python Code Node" onClick={addScriptNode} colorIndex={3} />
-            <NodeButton label="Wait/Delay Node" onClick={addAPINode} colorIndex={4} />
+            <NodeButton label="Wait/Delay Node" onClick={addWaitNode} colorIndex={4} />
           </div>
         </Panel>
 
