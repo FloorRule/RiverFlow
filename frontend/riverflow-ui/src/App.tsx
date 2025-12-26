@@ -375,6 +375,42 @@ function Flow() {
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 
+  function serializeFlow(
+    nodes: Node<NodeData>[],
+    edges: Edge[]
+  ) {
+    return {
+      nodes: nodes.map((n) => {
+        const { onOpen, ...data } = n.data as any;
+
+        return {
+          id: n.id,
+          type: n.type,
+          position: n.position,
+          data,
+        };
+      }),
+
+      edges: edges.map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        sourceHandle: e.sourceHandle ?? null,
+        targetHandle: e.targetHandle ?? null,
+      })),
+    };
+  }
+
+  const saveFlow = async () => {
+    const payload = serializeFlow(nodes, edges);
+
+    await fetch('http://localhost:8000/api/flow', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  };
+
   const activeNode = useMemo(
     () => nodes.find((n) => n.id === activeNodeId) ?? null,
     [nodes, activeNodeId]
@@ -619,7 +655,8 @@ function Flow() {
             >
               Cut
             </button>
-            <button className="mx-10 h-10 w-25 text-lg rounded-lg bg-emerald-500 text-emerald-50 font-bold font-mono text-shadow-md hover:text-gray-800">
+            <button className="mx-10 h-10 w-25 text-lg rounded-lg bg-emerald-500 text-emerald-50 font-bold font-mono text-shadow-md hover:text-gray-800"
+              onClick={saveFlow}>
               Run 
             </button>
           </div>
