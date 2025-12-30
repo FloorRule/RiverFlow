@@ -1,8 +1,11 @@
-class BaseNode():
-    def __init__(self, id, type, position):
-        self.id = id
-        self.type = type
-        self.positio = position
-    
-    def execute_node(self, context):
+from dataclasses import dataclass
+from typing import Any
+
+@dataclass(eq=True, frozen=True)
+class BaseNode:
+    id: str
+    type: str
+    position: Any
+
+    def execute_node(self, context: dict):
         raise NotImplementedError
