@@ -1,9 +1,9 @@
-from backend.nodes import BaseNode
+from . import BaseNode
 
-class WebhookNode(BaseNode):
+class WebhookNode(BaseNode.BaseNode):
     def __init__(self, id, type, position, config):
         super().__init__(id, type, position)
         self.config = config
 
     def execute_node(self, context):
-        print(self.config)
+        raise RuntimeError("WebhookNode should not be executed")
