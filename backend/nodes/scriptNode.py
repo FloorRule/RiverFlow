@@ -1,6 +1,6 @@
-from backend.nodes import BaseNode
+from . import BaseNode
 
-class ScriptNode(BaseNode):
+class ScriptNode(BaseNode.BaseNode):
     def __init__(self, id, type, position, config):
         super().__init__(id, type, position)
         self.config = config

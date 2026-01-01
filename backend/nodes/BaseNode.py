@@ -1,11 +1,10 @@
-from dataclasses import dataclass
-from typing import Any
+from dataclasses import dataclass, field
 
 @dataclass(eq=True, frozen=True)
 class BaseNode:
     id: str
     type: str
-    position: Any
+    position: object = field(compare=False, hash=False)
 
-    def execute_node(self, context: dict):
+    def execute_node(self, context):
         raise NotImplementedError

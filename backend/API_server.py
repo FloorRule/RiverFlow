@@ -4,7 +4,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from .nodes import WebhookNode,WaitNode,ScriptNode,ConditionNode,ApiNode
+from .nodes import webhookNode,waitNode,scriptNode,conditionNode,apiNode
 
 from .workFlow import WorkFlow
 
@@ -46,21 +46,21 @@ def buildFlow(nodes: list[Node], edges: list[Edge]):
     river = WorkFlow()
     for node in nodes:
         if(node.type == "apiNode"):
-            river.add_node(ApiNode(node.id, node.type, node.position, node.data))
+            river.add_node(apiNode.ApiNode(node.id, node.type, node.position, node.data))
         elif(node.type == "hookNode"):
-            river.add_node(WebhookNode(node.id, node.type, node.position, node.data))
+            river.add_node(webhookNode.WebhookNode(node.id, node.type, node.position, node.data))
         elif(node.type == "conditionNode"):
-            river.add_node(ConditionNode(node.id, node.type, node.position, node.data))
+            river.add_node(conditionNode.ConditionNode(node.id, node.type, node.position, node.data))
         elif(node.type == "scriptNode"):
-            river.add_node(ScriptNode(node.id, node.type, node.position, node.data))
+            river.add_node(scriptNode.ScriptNode(node.id, node.type, node.position, node.data))
         elif(node.type == "waitNode"):
-            river.add_node(WaitNode(node.id, node.type, node.position, node.data))
+            river.add_node(waitNode.WaitNode(node.id, node.type, node.position, node.data))
     
     for edge in edges:
         river.add_edge(edge.source,edge.target, edge.sourceHandle)
     return river
 
-WORKFLOWS = []
+WORKFLOWS = {}
 
 @app.post("/api/flow")
 async def flowAnalysis(flow: FlowEntry):

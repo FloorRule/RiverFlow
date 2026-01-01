@@ -1,3 +1,6 @@
+from backend.nodes.BaseNode import BaseNode
+
+
 class WorkFlow:
     def __init__(self):
         self.graph: dict[BaseNode, list[BaseNode]] = {}
@@ -32,7 +35,7 @@ class WorkFlow:
     
     def find_webhook_node(self):
         for node in self.node_map.values():
-            if node.type == "webhookNode":
+            if node.type == "hookNode":
                 return node
         raise RuntimeError("Webhook node not found")
 

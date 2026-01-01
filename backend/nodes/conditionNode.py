@@ -1,7 +1,7 @@
-from backend.nodes import BaseNode
+from . import BaseNode
 from simpleeval import simple_eval
 
-class ConditionNode(BaseNode):
+class ConditionNode(BaseNode.BaseNode):
     def __init__(self, id, type, position, config):
         super().__init__(id, type, position)
         self.config = config
