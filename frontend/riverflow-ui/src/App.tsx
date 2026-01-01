@@ -371,6 +371,7 @@ const initialEdges: Edge[] = [];
 function Flow() {
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<Set<string>>(new Set());
+  const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
 
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
@@ -404,11 +405,17 @@ function Flow() {
   const saveFlow = async () => {
     const payload = serializeFlow(nodes, edges);
 
-    await fetch('http://localhost:8000/api/flow', {
+    const res = await fetch('http://localhost:8000/api/flow', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
+
+    if(!res.ok)
+      throw new Error('Failed to save flow');
+
+    const data = await res.json();
+    setWebhookUrl(`http://localhost:8000${data.webhook_url}`);
   };
 
   const activeNode = useMemo(
@@ -619,6 +626,15 @@ function Flow() {
           </div>
         </Panel>
 
+        {webhookUrl && (
+          <Panel position="top-left">
+            <div className="w-90 max-h-[80vh] overflow-y-auto rounded-lg border border-border bg-card p-4 shadow-lg text-foreground">
+              <p>Webhook URL:</p>
+              <code>{webhookUrl}</code>
+            </div>
+          </Panel>  
+        )}
+
         {activeNode && (
           <Panel position="center-left">
             <div className="w-90 max-h-[80vh] overflow-y-auto rounded-lg border border-border bg-card p-4 shadow-lg text-foreground">
@@ -657,7 +673,7 @@ function Flow() {
             </button>
             <button className="mx-10 h-10 w-25 text-lg rounded-lg bg-emerald-500 text-emerald-50 font-bold font-mono text-shadow-md hover:text-gray-800"
               onClick={saveFlow}>
-              Run 
+              Save
             </button>
           </div>
         </Panel>
