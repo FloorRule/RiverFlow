@@ -30,10 +30,21 @@ class WorkFlow:
                 return node
         raise RuntimeError("No start node found")
     
+    def find_webhook_node(self):
+        for node in self.node_map.values():
+            if node.type == "webhookNode":
+                return node
+        raise RuntimeError("Webhook node not found")
+
     def execute(self, context: dict):
         start = self.find_start_node()
         visited = set()
         self._dfs_execute(start, context, visited)
+
+    def execute_from_trigger(self, trigger_node, context):
+        visited = set()
+        for neighbor in self.graph.get(trigger_node, []):
+            self._dfs_execute(neighbor, context, visited)
 
     def _dfs_execute(self, node, context, visited):
         if node in visited:

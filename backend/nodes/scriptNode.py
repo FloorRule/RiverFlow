@@ -6,4 +6,30 @@ class ScriptNode(BaseNode):
         self.config = config
 
     def execute_node(self, context):
-        print(self.config)
+        code = self.config["pythonScript"]
+
+        env = {
+            "input_data": context["input"],
+            "logs": context["logs"],
+            "result": None
+        }
+
+        SAFE_BUILTINS = {
+            "len": len,
+            "str": str,
+            "int": int,
+            "float": float,
+            "bool": bool,
+        }
+
+        try:
+            exec(code, {"__builtins__": SAFE_BUILTINS}, env)
+        except Exception as e:
+            context["logs"].append({"node": self.id, "error": str(e)})
+            return False
+
+        if env.get("result") is not None:
+            context["input"][self.id] = env["result"]
+
+        return True
+

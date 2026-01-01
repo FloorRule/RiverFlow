@@ -6,4 +6,4 @@ class WebhookNode(BaseNode):
         self.config = config
 
     def execute_node(self, context):
-        print(self.config)
+        raise RuntimeError("WebhookNode should not be executed")

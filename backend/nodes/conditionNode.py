@@ -1,4 +1,5 @@
 from backend.nodes import BaseNode
+from simpleeval import simple_eval
 
 class ConditionNode(BaseNode):
     def __init__(self, id, type, position, config):
@@ -14,5 +15,5 @@ class ConditionNode(BaseNode):
         self.falseNode = false
 
     def execute_node(self, context):
-        key = self.config.get("variable")
-        return bool(context.get(key))
+        expr = self.config.get("expression")
+        return simple_eval(expr, names=context, functions={"len": len})

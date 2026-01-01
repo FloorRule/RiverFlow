@@ -1,3 +1,4 @@
+from time import sleep
 from backend.nodes import BaseNode
 
 class WaitNode(BaseNode):
@@ -6,4 +7,7 @@ class WaitNode(BaseNode):
         self.config = config
 
     def execute_node(self, context):
-        print(self.config)
+        if not self.config.get("delay").isalnum():
+            return False
+        sleep(int(self.config.get("delay")))
+        return True
