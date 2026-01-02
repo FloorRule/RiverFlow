@@ -68,7 +68,7 @@ async def flowAnalysis(flow: FlowEntry):
 
     river = buildFlow(flow.nodes, flow.edges)
 
-    workflow_id = str(uuid.uuid4())
+    workflow_id = str(river.find_start_node().id)
     WORKFLOWS[workflow_id] = river
 
     webhook_url = f"/hooks/{workflow_id}"

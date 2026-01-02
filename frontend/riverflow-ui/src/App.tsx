@@ -243,8 +243,9 @@ function HookNodeInspector({
       </div>
 
       <div>
-        <label className="block text-sm font-medium">Url</label>
+        <label className="block text-sm font-medium">Url Template</label>
         <textarea
+          disabled={true}
           rows={1}
           className="mt-1 w-full rounded border border-border bg-background px-2 py-1 font-mono text-sm"
           placeholder='api.yourapp.com/hooks/{workflow_id}'
