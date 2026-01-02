@@ -20,6 +20,9 @@ class ScriptNode(BaseNode.BaseNode):
             "int": int,
             "float": float,
             "bool": bool,
+            "range": range,
+            "enumerate": enumerate,
+            "print": print,
         }
 
         try:

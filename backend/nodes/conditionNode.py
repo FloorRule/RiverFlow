@@ -16,4 +16,4 @@ class ConditionNode(BaseNode.BaseNode):
 
     def execute_node(self, context):
         expr = self.config.get("expression")
-        return simple_eval(expr, names=context, functions={"len": len})
+        return simple_eval(expr, names=context["input"], functions={"len": len})

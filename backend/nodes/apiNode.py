@@ -1,12 +1,19 @@
 import json
-from flask import render_template
+import re
 import requests
-from . import BaseNode
+from .BaseNode import BaseNode
 
-class ApiNode(BaseNode.BaseNode):
+class ApiNode(BaseNode):
     def __init__(self, id, type, position, config):
         super().__init__(id, type, position)
         self.config = config
+
+    def render_body_template(self, template: str, data: dict) -> str:
+        def replacer(match):
+            key = match.group(1)
+            return str(data.get(key, ""))
+
+        return re.sub(r"\{\{(\w+)\}\}", replacer, template)
 
     def execute_node(self, context):
         method = self.config["method"]
@@ -18,7 +25,7 @@ class ApiNode(BaseNode.BaseNode):
             headers = {}
 
             if body_template:
-                rendered = render_template(body_template, context["input"])
+                rendered = self.render_body_template(body_template, context["input"])
                 rendered_body = json.loads(rendered)
                 headers["Content-Type"] = "application/json"
 
@@ -32,7 +39,6 @@ class ApiNode(BaseNode.BaseNode):
 
             response.raise_for_status()
 
-            # Store result in context
             context["input"][self.id] = {
                 "status": response.status_code,
                 "body": response.json() if response.content else None
@@ -46,3 +52,4 @@ class ApiNode(BaseNode.BaseNode):
                 "error": str(e)
             })
             return False
+
