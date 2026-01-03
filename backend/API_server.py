@@ -1,11 +1,9 @@
-import json
 import uuid
-from typing import Optional
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 
-from backend.db.init_db_script import load_flow_from_db, save_flow_to_db
+from backend.db.init_db_script import load_flow_from_db, save_flow_to_db, FlowEntry, Edge, Node
+from backend.websocket import ConnectionManager
 
 from .nodes import webhookNode,waitNode,scriptNode,conditionNode,apiNode
 
@@ -22,28 +20,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-class Position(BaseModel):
-    x: float
-    y: float
-
-class Node(BaseModel):
-    id: str
-    type: str
-    position: Position
-    data: dict
-
-class Edge(BaseModel):
-    id: str
-    source: str
-    target: str
-    sourceHandle: Optional[str]
-    targetHandle: Optional[str]
-
-class FlowEntry(BaseModel):
-    nodes: list[Node]
-    edges: list[Edge]
 
 def buildFlow(nodes: list[Node], edges: list[Edge]):
     river = WorkFlow()
@@ -64,6 +40,7 @@ def buildFlow(nodes: list[Node], edges: list[Edge]):
     return river
 
 WORKFLOWS = {}
+manager = ConnectionManager()
 
 @app.post("/api/flow")
 async def flowAnalysis(flow: FlowEntry):
@@ -84,6 +61,15 @@ async def flowAnalysis(flow: FlowEntry):
         "webhook_url": webhook_url
     }
 
+@app.websocket("/ws/{workflow_id}")
+async def websocket_endpoint(websocket: WebSocket, workflow_id: str):
+    await manager.connect(websocket, workflow_id)
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(websocket, workflow_id)
+
 @app.get("/api/flow/{workflow_id}")
 async def get_flow(workflow_id: str):
     river = WORKFLOWS.get(workflow_id)
@@ -96,10 +82,7 @@ async def get_flow(workflow_id: str):
         return {"nodes": [n.dict() for n in nodes], "edges": [e.dict() for e in edges]}
     
     nodes, edges = load_flow_from_db(workflow_id)
-    return {
-        "nodes": [n.dict() for n in nodes],
-        "edges": [e.dict() for e in edges]
-    }
+    return {"nodes": [n.dict() for n in nodes], "edges": [e.dict() for e in edges]} 
 
 @app.post("/hooks/{workflow_id}")
 async def webhook_handler(workflow_id: str, request: Request):
@@ -122,8 +105,10 @@ async def webhook_handler(workflow_id: str, request: Request):
     }
 
     webhook_node = river.find_webhook_node()
+    async def on_node_visit(node_id):
+        await manager.broadcast_node_active(workflow_id, node_id)
 
-    river.execute_from_trigger(webhook_node, context)
+    await river.execute_from_trigger(webhook_node, context, callback=on_node_visit)
 
     return {
         "status": "executed",

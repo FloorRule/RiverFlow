@@ -44,27 +44,32 @@ class WorkFlow:
         visited = set()
         self._dfs_execute(start, context, visited)
 
-    def execute_from_trigger(self, trigger_node, context):
+    async def execute_from_trigger(self, trigger_node, context, callback=None):
+        if not callback: return
+
         visited = set()
         for neighbor in self.graph.get(trigger_node, []):
-            self._dfs_execute(neighbor, context, visited)
+            await self._dfs_execute(neighbor, context, visited, callback=callback)
 
-    def _dfs_execute(self, node, context, visited):
+    async def _dfs_execute(self, node, context, visited, callback=None):
         if node in visited:
             return
 
         visited.add(node)
 
         result = node.execute_node(context)
+        if callback:
+            await callback(node.id)
+
 
         # condition node routing
         if node.type == "conditionNode":
             next_node = node.trueNode if result else node.falseNode
             if next_node:
-                self._dfs_execute(next_node, context, visited)
+                await self._dfs_execute(next_node, context, visited, callback=callback)
             return
 
         for neighbor in self.graph.get(node, []):
-            self._dfs_execute(neighbor, context, visited)
+            await self._dfs_execute(neighbor, context, visited, callback=callback)
 
 
