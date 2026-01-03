@@ -1,6 +1,6 @@
 import requests
 
-WORKFLOW_ID = "e99cc1ec-2bce-4d39-9ed3-70a92b1b396a" #! <- replace with flow ID
+WORKFLOW_ID = "73f0a49e-5fb7-46be-929b-f016efbbc19b" #! <- replace with flow ID
 WEBHOOK_URL = f"http://localhost:8000/hooks/{WORKFLOW_ID}"
 
 payload = {

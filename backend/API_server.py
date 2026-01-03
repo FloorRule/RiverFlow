@@ -1,8 +1,11 @@
+import json
 import uuid
 from typing import Optional
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+
+from backend.db.init_db_script import load_flow_from_db, save_flow_to_db
 
 from .nodes import webhookNode,waitNode,scriptNode,conditionNode,apiNode
 
@@ -68,7 +71,10 @@ async def flowAnalysis(flow: FlowEntry):
 
     river = buildFlow(flow.nodes, flow.edges)
 
-    workflow_id = str(river.find_start_node().id)
+    start_node = river.find_start_node()
+    workflow_id = str(start_node.id) if start_node else str(uuid.uuid4())
+    
+    save_flow_to_db(workflow_id, flow.nodes, flow.edges)
     WORKFLOWS[workflow_id] = river
 
     webhook_url = f"/hooks/{workflow_id}"
@@ -78,12 +84,35 @@ async def flowAnalysis(flow: FlowEntry):
         "webhook_url": webhook_url
     }
 
+@app.get("/api/flow/{workflow_id}")
+async def get_flow(workflow_id: str):
+    river = WORKFLOWS.get(workflow_id)
+    
+    if not river:
+        nodes, edges = load_flow_from_db(workflow_id)
+        if not nodes:
+             raise HTTPException(status_code=404, detail="Workflow not found")
+        
+        return {"nodes": [n.dict() for n in nodes], "edges": [e.dict() for e in edges]}
+    
+    nodes, edges = load_flow_from_db(workflow_id)
+    return {
+        "nodes": [n.dict() for n in nodes],
+        "edges": [e.dict() for e in edges]
+    }
 
 @app.post("/hooks/{workflow_id}")
 async def webhook_handler(workflow_id: str, request: Request):
     river = WORKFLOWS.get(workflow_id)
     if not river:
-        raise HTTPException(status_code=404, detail="Workflow not found")
+        print(f"Workflow {workflow_id} not in memory, loading from DB...")
+        nodes, edges = load_flow_from_db(workflow_id)
+        
+        if nodes and edges:
+            river = buildFlow(nodes, edges)
+            WORKFLOWS[workflow_id] = river
+        else:
+            raise HTTPException(status_code=404, detail="Workflow not found")
 
     payload = await request.json()
 

@@ -374,6 +374,8 @@ function Flow() {
   const [selectedEdgeIds, setSelectedEdgeIds] = useState<Set<string>>(new Set());
   const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
 
+  const [loadId, setLoadId] = useState<string>("");
+
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
 
@@ -402,6 +404,37 @@ function Flow() {
       })),
     };
   }
+
+  const loadFlow = async () => {
+    if(!loadId) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/flow/${loadId}`);
+      
+      if(!res.ok) {
+        alert("Workflow not found!");
+        return;
+      }
+
+      const data = await res.json();
+
+      const restoredNodes = data.nodes.map((node: any) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onOpen: (id: string) => setActiveNodeId(id),
+        }
+      }));
+
+      setNodes(restoredNodes);
+      setEdges(data.edges);
+      setWebhookUrl(`http://localhost:8000/hooks/${loadId}`);
+      
+    } catch (e) {
+      console.error(e);
+      alert("Failed to connect to server");
+    }
+  };
 
   const saveFlow = async () => {
     const payload = serializeFlow(nodes, edges);
@@ -672,6 +705,27 @@ function Flow() {
             >
               Cut
             </button>
+
+            <div className="h-8 w-[1px] bg-border"></div>
+
+            <div className="flex items-center gap-2">
+              <input 
+                type="text" 
+                placeholder="Workflow ID..." 
+                value={loadId}
+                onChange={(e) => setLoadId(e.target.value)}
+                className="h-9 w-80 rounded-md border border-border bg-background px-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+              <button 
+                onClick={loadFlow}
+                className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
+              >
+                Load
+              </button>
+            </div>
+
+            <div className="h-8 w-[1px] bg-border"></div>
+
             <button className="mx-10 h-10 w-25 text-lg rounded-lg bg-emerald-500 text-emerald-50 font-bold font-mono text-shadow-md hover:text-gray-800"
               onClick={saveFlow}>
               Save
