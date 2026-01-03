@@ -57,11 +57,14 @@ CREATE TABLE IF NOT EXISTS condition_node (
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
     conn.executescript(SCHEMA)
     conn.close()
     
 def get_connection():
-    return sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
+    return conn
 
 class Position(BaseModel):
     x: float
@@ -89,6 +92,7 @@ def save_flow_to_db(workflow_id: str, nodes: list[Node], edges: list[Edge]):
     edges_json = json.dumps([edge.dict() for edge in edges])
 
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("PRAGMA foreign_keys = ON")
         cursor = conn.cursor()
         
         cursor.execute("INSERT OR REPLACE INTO workflow (id, edges) VALUES (?, ?)", (workflow_id, edges_json))
@@ -103,27 +107,27 @@ def save_flow_to_db(workflow_id: str, nodes: list[Node], edges: list[Edge]):
 
             if node.type == "apiNode":
                 cursor.execute(
-                    "INSERT INTO api_node (id, method, url, body) VALUES (?, ?, ?, ?)",
+                    "INSERT OR REPLACE INTO api_node (id, method, url, body) VALUES (?, ?, ?, ?)",
                     (node.id, node.data.get('method', 'GET'), node.data.get('url', ''), node.data.get('body', ''))
                 )
             elif node.type == "scriptNode":
                 cursor.execute(
-                    "INSERT INTO script_node (id, python_script) VALUES (?, ?)",
+                    "INSERT OR REPLACE INTO script_node (id, python_script) VALUES (?, ?)",
                     (node.id, node.data.get('pythonScript', ''))
                 )
             elif node.type == "waitNode":
                 cursor.execute(
-                    "INSERT INTO wait_node (id, delay) VALUES (?, ?)",
+                    "INSERT OR REPLACE INTO wait_node (id, delay) VALUES (?, ?)",
                     (node.id, node.data.get('delay', '0'))
                 )
             elif node.type == "webhookNode" or node.type == "hookNode":
                 cursor.execute(
-                    "INSERT INTO webhook_node (id, url) VALUES (?, ?)",
+                    "INSERT OR REPLACE INTO webhook_node (id, url) VALUES (?, ?)",
                     (node.id, node.data.get('url', ''))
                 )
             elif node.type == "conditionNode":
                 cursor.execute(
-                    "INSERT INTO condition_node (id, expression) VALUES (?, ?)",
+                    "INSERT OR REPLACE INTO condition_node (id, expression) VALUES (?, ?)",
                     (node.id, node.data.get('expression', ''))
                 )
         conn.commit()

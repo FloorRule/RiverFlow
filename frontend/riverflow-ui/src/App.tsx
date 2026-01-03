@@ -2,7 +2,7 @@ import { applyEdgeChanges, applyNodeChanges,Background, Controls, ReactFlow , ty
  
 import "@xyflow/react/dist/style.css";
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { APINode, type ApiNodeData } from "./nodes/API-node";
 import { ConditionNode, type ConditionNodeData } from "./nodes/Condition-node";
 import { ScriptNode, type ScriptNodeData } from "./nodes/Script-node";
@@ -375,9 +375,67 @@ function Flow() {
   const [webhookUrl, setWebhookUrl] = useState<string | null>(null);
 
   const [loadId, setLoadId] = useState<string>("");
+  const [runningNodeId, setRunningNodeId] = useState<string | null>(null);
 
   const [nodes, setNodes] = useState<Node<NodeData>[]>(initialNodes);
   const [edges, setEdges] = useState<Edge[]>(initialEdges);
+
+  const executionQueue = useRef<string[]>([]);
+  const isPlayingRef = useRef(false);
+
+  useEffect(() => {
+    const currentWorkflowId = loadId;
+    if (!currentWorkflowId) return;
+
+    const ws = new WebSocket(`ws://localhost:8000/ws/${currentWorkflowId}`);
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'NODE_ACTIVE') {
+        executionQueue.current.push(data.node_id);
+        processQueue();
+      }
+    };
+    return () => ws.close();
+  }, [loadId]);
+
+  const processQueue = useCallback(async () => {
+    if (isPlayingRef.current) 
+      return;
+    isPlayingRef.current = true;
+
+    while (executionQueue.current.length > 0) {
+      const nextNodeId = executionQueue.current.shift();
+      
+      if (nextNodeId) {
+        setRunningNodeId(nextNodeId);
+        await new Promise(r => setTimeout(r, 600));
+      }
+    }
+
+    setRunningNodeId(null);
+    isPlayingRef.current = false;
+  }, []);
+
+  useEffect(() => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        const isRunning = node.id === runningNodeId;
+        
+        return {
+          ...node,
+          style: isRunning 
+            ? { 
+                border: '2px solid #10b981',
+                boxShadow: '0 0 15px 2px rgba(16, 185, 129, 0.6)',
+                transition: 'all 0.3s ease',
+                transform: 'scale(1.05)'
+              } 
+            : { transition: 'all 0.3s ease' },
+        };
+      })
+    );
+  }, [runningNodeId, setNodes]);
 
   function serializeFlow(
     nodes: Node<NodeData>[],
