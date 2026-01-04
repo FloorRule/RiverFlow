@@ -2,5 +2,5 @@
 A React-Flow visual workflow orchestration tool to design automation pipelines.
 
 
-https://github.com/user-attachments/assets/37d0cc46-f652-45e8-b1e9-91e2c478f82d
+https://github.com/user-attachments/assets/ee1d64fa-54e9-459b-b36e-520872e82d1d
 
