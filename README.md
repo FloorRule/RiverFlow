@@ -2,10 +2,9 @@
 
 **Visual Workflow Orchestration Engine**
 
-https://github.com/user-attachments/assets/ee1d64fa-54e9-459b-b36e-520872e82d1d
-
-
 RiverFlow is a **Full-Stack Automation Platform** (similar to n8n or Zapier) designed to visually architect and execute complex logical pipelines. It allows users to drag-and-drop nodes to create logic flows, saves them to a structured database, and executes them in real-time via webhook triggers with live visual feedback.
+
+https://github.com/user-attachments/assets/ee1d64fa-54e9-459b-b36e-520872e82d1d
 
 ---
 
