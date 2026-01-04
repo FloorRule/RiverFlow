@@ -37,7 +37,6 @@ The system bridges the gap between visual design and backend execution. The arch
 ### Roadmap
 
 *   Containerization via Docker Compose.
-*   Drag-and-drop connection cutting logic.
 *   Detailed execution history logs.
 
 ---
